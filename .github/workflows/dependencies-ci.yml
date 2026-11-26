@@ -1,0 +1,26 @@
+name: Dependency Audit
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  npm-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [backend, frontend]
+    defaults:
+      run:
+        working-directory: ${{ matrix.app }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          package-manager-cache: false
+      - run: npm audit --audit-level=high

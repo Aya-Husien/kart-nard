@@ -1,0 +1,26 @@
+name: Backend CI
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  backend-quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - run: npm run lint:check
+      - run: npm run build
+      - run: npm test -- --ci --coverage
