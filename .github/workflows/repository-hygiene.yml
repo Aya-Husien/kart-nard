@@ -1,0 +1,28 @@
+name: Repository Hygiene
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  repository-hygiene:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Reject committed local environment files
+        shell: bash
+        run: |
+          python3 - <<'PYCODE'
+          import subprocess
+          from pathlib import PurePosixPath
+          paths = subprocess.check_output(['git', 'ls-files', '-z']).decode().split('\0')
+          allowed = {'.env.example', '.env.sample', '.env.template'}
+          blocked = [p for p in paths if (PurePosixPath(p).name == '.env' or PurePosixPath(p).name.startswith('.env.')) and PurePosixPath(p).name not in allowed]
+          if blocked:
+              print('Remove local environment files from Git:')
+              print('\n'.join(blocked))
+              raise SystemExit(1)
+          PYCODE

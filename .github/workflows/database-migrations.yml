@@ -1,0 +1,45 @@
+name: Database Migration Safety
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  migration-safety:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      BASE_SHA: ${{ github.event.pull_request.base.sha }}
+      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          package-manager-cache: false
+      - name: Reject changes to existing migration files
+        shell: bash
+        run: |
+          set -euo pipefail
+          base=$(git merge-base "$BASE_SHA" "$HEAD_SHA")
+          changes=$(git diff --name-only --no-renames --diff-filter=DMT "$base" "$HEAD_SHA" -- backend/migrations/)
+          if [[ -n "$changes" ]]; then
+            echo "Existing migrations must not be modified or removed."
+            printf '%s\n' "$changes"
+            exit 1
+          fi
+      - name: Lint new PostgreSQL SQL migrations
+        shell: bash
+        run: |
+          set -euo pipefail
+          base=$(git merge-base "$BASE_SHA" "$HEAD_SHA")
+          mapfile -d '' -t migrations < <(git diff --name-only -z --no-renames --diff-filter=A "$base" "$HEAD_SHA" -- 'backend/migrations/*.sql')
+          if (( ${#migrations[@]} == 0 )); then
+            echo "No new SQL migrations."
+            exit 0
+          fi
+          npm install --global squawk-cli
+          squawk "${migrations[@]}"
