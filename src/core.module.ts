@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, type ConfigType } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { databaseConfig } from './config/database.config.js';
 import { envValidationSchema } from './config/env.validation.js';
+import { SequelizeModule } from '@nestjs/sequelize';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
@@ -11,15 +11,17 @@ import { envValidationSchema } from './config/env.validation.js';
       validationSchema: envValidationSchema,
       load: [databaseConfig],
     }),
-    TypeOrmModule.forRootAsync({
-      inject: [databaseConfig.KEY],
-      useFactory: (db: ConfigType<typeof databaseConfig>) => ({
-        type: 'postgres',
-        url: db.url,
-        autoLoadEntities: true,
-        logging: ['query']
+    SequelizeModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        dialect: 'postgres',
+        uri: config.getOrThrow<string>('DATABASE_URL'),
+        autoLoadModels: true,
+        synchronize: false,
+        logging: false,
       }),
     }),
   ],
 })
-export class CoreModule {}
+export class CoreModule { }
