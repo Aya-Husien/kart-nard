@@ -20,13 +20,12 @@
     "test:cov": "vitest run --coverage",
     "test:debug": "vitest --inspect-brk --no-file-parallelism",
     "test:e2e": "vitest run --config ./vitest.config.e2e.ts",
-    "typeorm": "typeorm -d dist/data-source.js",
     "sequelize": "node --import tsx ./node_modules/sequelize-cli/lib/sequelize --options-path .sequelizerc.cjs",
     "migration:generate": "npm run sequelize -- migration:generate",
     "migration:run": "npm run sequelize -- db:migrate",
     "migration:revert": "npm run sequelize -- db:migrate:undo",
     "migration:status": "npm run sequelize -- db:migrate:status",
-      "lint:check": "eslint \"{src,test}/**/*.ts\" --max-warnings=0"
+    "lint:check": "eslint \"{src,test}/**/*.ts\" --max-warnings=0"
   },
   "dependencies": {
     "@nestjs/common": "^12.0.1",
@@ -34,7 +33,6 @@
     "@nestjs/core": "^12.0.1",
     "@nestjs/platform-express": "^12.0.1",
     "@nestjs/sequelize": "^12.0.1",
-    "@nestjs/typeorm": "^12.0.3",
     "dotenv": "^18.0.10",
     "joi": "^18.3.2",
     "pg": "^8.23.1",
@@ -43,7 +41,6 @@
     "rxjs": "^7.8.1",
     "sequelize": "^6.37.8",
     "sequelize-typescript": "^2.1.6",
-    "typeorm": "^1.1.3",
     "umzug": "^3.8.3"
   },
   "devDependencies": {
