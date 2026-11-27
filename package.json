@@ -21,12 +21,12 @@
     "test:debug": "vitest --inspect-brk --no-file-parallelism",
     "test:e2e": "vitest run --config ./vitest.config.e2e.ts",
     "typeorm": "typeorm -d dist/data-source.js",
-    "migration:generate": "npm run build && npm run typeorm -- migration:generate",
-    "migration:run": "tsx database/migrator.ts up",
-    "migration:revert": "tsx database/migrator.ts down",
-    "migration:status": "tsx database/migrator.ts executed",
-    "migration:pending": "tsx database/migrator.ts pending",
-    "lint:check": "eslint \"{src,test}/**/*.ts\" --max-warnings=0"
+    "sequelize": "node --import tsx ./node_modules/sequelize-cli/lib/sequelize --options-path .sequelizerc.cjs",
+    "migration:generate": "npm run sequelize -- migration:generate",
+    "migration:run": "npm run sequelize -- db:migrate",
+    "migration:revert": "npm run sequelize -- db:migrate:undo",
+    "migration:status": "npm run sequelize -- db:migrate:status",
+      "lint:check": "eslint \"{src,test}/**/*.ts\" --max-warnings=0"
   },
   "dependencies": {
     "@nestjs/common": "^12.0.1",
