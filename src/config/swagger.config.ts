@@ -17,10 +17,13 @@ export function configureSwagger(app: INestApplication): void {
   SwaggerModule.setup('api/docs', app, document, {
     swaggerOptions: {
       withCredentials: true,
-      requestInterceptor: (request: { method?: string; headers: Record<string, string> }) => {
-        if (request.method?.toUpperCase() === 'POST') {
-          request.headers['X-CSRF-Protection'] = '1';
-        }
+
+      requestInterceptor: (request: {
+        headers: Record<string, string>;
+      }) => {
+        request.headers = request.headers || {};
+        request.headers['X-CSRF-Protection'] = '1';
+
         return request;
       },
     },

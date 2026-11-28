@@ -4,7 +4,7 @@ import {
 import {
   ApiCreatedResponse, ApiNoContentResponse, ApiOkResponse, ApiOperation, ApiTags,
 } from '@nestjs/swagger';
-import { ApiErrorResponses } from '../common/swagger/api-error-responses.decorator.js';
+import { ApiErrorResponses } from '../../common/swagger/api-error-responses.decorator.js';
 import { CategoriesService } from './categories.service.js';
 import { CategoryResponseDto } from './dto/category-response.dto.js';
 import { CreateCategoryDto } from './dto/create-category.dto.js';
