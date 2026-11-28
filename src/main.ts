@@ -23,7 +23,6 @@ async function bootstrap() {
       transform: true,
     }),
   );
-  
 
   app.useGlobalInterceptors(
     new ResponseInterceptor(),
