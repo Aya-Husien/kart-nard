@@ -8,7 +8,6 @@ import type { NestExpressApplication } from '@nestjs/platform-express';
 import { configureSwagger } from './config/swagger.config.js';
 import { configureSession } from './config/session.config.js';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor.js';
-import { HttpExceptionFilter } from './common/filters/http-exception.filter.js';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -25,7 +24,6 @@ async function bootstrap() {
     }),
   );
   
-  app.useGlobalFilters(new HttpExceptionFilter());
 
   app.useGlobalInterceptors(
     new ResponseInterceptor(),
