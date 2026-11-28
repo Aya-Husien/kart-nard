@@ -9,11 +9,13 @@ import {
 } from '@nestjs/common';
 
 import type { Response } from 'express';
+import { send } from 'process';
 
 import {
   UniqueConstraintError,
   ForeignKeyConstraintError,
   ValidationError,
+  DatabaseError,
 } from 'sequelize';
 
 interface ErrorBody {
@@ -28,6 +30,7 @@ export class HttpErrorFilter implements ExceptionFilter {
 
   catch(exception: unknown, host: ArgumentsHost): void {
     const res = host.switchToHttp().getResponse<Response>();
+    if (res.headersSent) return;
 
     // 1. Unique Constraint
     if (exception instanceof UniqueConstraintError) {
@@ -35,7 +38,10 @@ export class HttpErrorFilter implements ExceptionFilter {
         error: {
           code: 'ALREADY_EXISTS',
           message: 'Resource already exists',
-          details: [],
+          details: exception.errors.map((e) => ({
+        field: e.path,
+        message: 'must be unique',
+      })),
         },
       });
       return;
@@ -53,13 +59,30 @@ export class HttpErrorFilter implements ExceptionFilter {
       return;
     }
 
+  // 3. CHECK constraint (pg code 23514)
+if (
+  exception instanceof DatabaseError &&
+  (exception.parent as { code?: string } | undefined)?.code === '23514'
+) {
+  res.status(HttpStatus.CONFLICT).json({
+    error: {
+      code: 'CONSTRAINT_VIOLATION',
+      message: 'Operation violates a data integrity rule',
+      details: [],
+    },
+  });
+  return;
+}
     // 3. Sequelize Validation
     if (exception instanceof ValidationError) {
       res.status(HttpStatus.BAD_REQUEST).json({
         error: {
-          code: 'VALIDATION_ERROR',
+          code: 'VALIDATION_FAILED',
           message: 'Validation failed',
-          details: [],
+          details: exception.errors.map((e) => ({
+        field: e.path,
+        message: e.message,
+      })),
         },
       });
       return;
@@ -68,6 +91,9 @@ export class HttpErrorFilter implements ExceptionFilter {
     // 4. NestJS HTTP Exceptions
     if (exception instanceof HttpException) {
       const status = exception.getStatus();
+      if (status >= 500) {
+      this.logger.error(exception.message, exception.stack);
+                         }
       const raw = exception.getResponse();
 
       const body: ErrorBody =

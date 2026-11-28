@@ -9,6 +9,8 @@ import { configureSwagger } from './config/swagger.config.js';
 import { configureSession } from './config/session.config.js';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor.js';
 
+import { HttpErrorFilter } from './common/http-error-fillter.js';
+import { validationExceptionFactory } from './common/validation-exception.factory.js';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
@@ -21,6 +23,7 @@ async function bootstrap() {
       whitelist: true,
       forbidNonWhitelisted: true,
       transform: true,
+      exceptionFactory: validationExceptionFactory,
     }),
   );
 
@@ -31,6 +34,7 @@ async function bootstrap() {
 
   configureSwagger(app);
 
+  app.useGlobalFilters(new HttpErrorFilter());
   await app.listen(process.env.PORT ?? 3000);
 }
 
