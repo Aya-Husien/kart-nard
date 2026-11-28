@@ -1,29 +1,37 @@
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module.js';
-import { Reflector } from '@nestjs/core';
-import { ClassSerializerInterceptor , ValidationPipe} from '@nestjs/common';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import {
+  ClassSerializerInterceptor,
+  ValidationPipe,
+} from '@nestjs/common';
+import type { NestExpressApplication } from '@nestjs/platform-express';
+import { configureSwagger } from './config/swagger.config.js';
+import { configureSession } from './config/session.config.js';
+import { ResponseInterceptor } from './common/interceptors/response.interceptor.js';
+
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
   app.setGlobalPrefix('api/v1');
-  app.enableCors();
-   app.useGlobalPipes(
+
+  configureSession(app);
+
+  app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
       forbidNonWhitelisted: true,
       transform: true,
     }),
-    
   );
-  const config = new DocumentBuilder()
-  .setTitle('Kart Nard API')
-  .setDescription('API documentation')
-  .setVersion('1.0')
-  .build();
 
- const document = SwaggerModule.createDocument(app, config);
- SwaggerModule.setup('api/docs', app, document);
-  app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
+  app.useGlobalInterceptors(
+    new ResponseInterceptor(),
+    new ClassSerializerInterceptor(app.get(Reflector)),
+  );
+
+  configureSwagger(app);
+
   await app.listen(process.env.PORT ?? 3000);
 }
+
 await bootstrap();
